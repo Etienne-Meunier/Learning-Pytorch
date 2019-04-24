@@ -43,10 +43,11 @@ nz = 100
 
 # ​		`ngf`: Depths of the feature map carried by the generator - 64
 
-ngf = 32
+
+ngf = 64
 # ​		`ndf` : Depths feature map discriminator - 64
 
-ndf = 32
+ndf = 64
 
 # #### Training :
 #

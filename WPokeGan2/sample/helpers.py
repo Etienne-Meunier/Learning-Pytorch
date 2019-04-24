@@ -36,3 +36,13 @@ def weights_init(m):
     elif classname.find('BatchNorm') != -1:
         nn.init.normal_(m.weight.data, 1.0, 0.02)
         nn.init.constant_(m.bias.data, 0)
+
+def same_padding_conv2(n_input,kernel_size,stride) :
+    """
+    Return the padding value to use to have the same size of output and of input size
+    :param n_input: size of the input
+    :param kernel_size: size of the kerne;
+    :param stride: stride used
+    :return: padding value to use
+    """
+    return ((n_input-1)*stride+kernel_size-n_input)/2

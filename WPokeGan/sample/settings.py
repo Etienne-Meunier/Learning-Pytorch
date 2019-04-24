@@ -2,11 +2,14 @@ import random as random
 import torch
 from visdom import Visdom
 
-print('Load settings PokeGan')
+print('Load settings WPokeGan')
 
 # visualization dasboard
 
-viz = Visdom(env='PokeGan')
+try :
+    viz = Visdom(env='WPokeGan')
+except Exception as e :
+    print ('Impossible to connect to visdom')
 
 # Set random seed for reproducibility
 manualSeed = 999
@@ -50,9 +53,17 @@ ndf = 32
 # ​		`num_epoch` : Number of epoch to do - 5
 
 num_epochs = 1000
+
+d_iters = 5
+g_iters = 1
+
 # ​		`lr` : learning rate - 0.0002
 
-lr = 0.00002
+lr = 0.0002
 
-# ​		`beta1` : parameters for Adam optimizer - 0.5
-beta1 = 0.5
+
+# Wgan parameters
+
+# According to classical Wgan algorithm we clip the parameters of the descriminator
+# so can netD() be a 1-Lipschitz function
+c = 0.01

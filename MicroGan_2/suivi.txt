@@ -1,0 +1,3 @@
+- Le changement de sigmoid a Softmax et de 1*64*64 to 6*64*64
+- Le training c'est ien passe jusqu'a l'iteration 2 de l'epoch 16 ou le discriminator a tout laisser passe d'un coup il a une enorme loss function pour le discriminator et une loss function de 0 pour le Generateur
+-
