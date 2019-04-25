@@ -138,7 +138,7 @@ def showMap(m, generated=False):
 #     plt.show()
     return
 
-def showMapVisdom(m,viz,generated=False,win_name='',iters=None) :
+def showMapVisdom(m,viz,generated=False,win_name='',epoch=None) :
     if generated :
         ints = m.squeeze().numpy()
         # Transpose the ints to their corresponding image index
@@ -148,9 +148,9 @@ def showMapVisdom(m,viz,generated=False,win_name='',iters=None) :
     else :
         ints = m.getTileMap()
     im = getMapImage(ints)
-    im.save('../outputs/out.png','PNG')
+    im.save('../outputs/out_{}.png'.format(epoch),'PNG')
     trans = transforms.ToTensor()
-    viz.image(trans(im),win = win_name)
+    viz.image(trans(im), win = win_name)
 
 def plotResults(q):
     '''

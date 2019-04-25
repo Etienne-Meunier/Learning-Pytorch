@@ -137,12 +137,13 @@ class MicroGan() :
         if (iters % 20 == 0) or ((epoch == num_epochs - 1) and (i == len(self.dataloader) - 1)):
             with torch.no_grad():
                 fake = self.netG(self.fixed_noise).detach().cpu()
-                display_city(fake[0],win_name='Test Example')
+                display_city(fake[0],win_name='Test Example',iters)
 
 
 
     def save_model(self,iters,epoch,errD,errG):
-        if iters%100 == 0 :
+        if iters%500 == 0 :
+            print('Save model iters {}'.format(iters))
             torch.save({
                 'iters' : iters,
                 'epoch': epoch,
