@@ -1,14 +1,15 @@
 from settings import *
 import torch.nn as nn
-from helpers import load_dataset,weights_init,display_city
+from helpers import load_dataset,weights_init,display_city,create_viz
 from Discriminator import Discriminator
 from Generator import Generator
 import torch.optim as optim
 
 class MicroGan() :
 
-    def __init__(self):
-        self.dataset, self.dataloader, self.device = load_dataset()
+    def __init__(self,vizualize):
+        self.viz = create_viz(name_env) if vizualize else None
+        self.dataset, self.dataloader, self.device = load_dataset(self.viz)
 
         self.netG = Generator(ngpu).to(self.device)
         self.netD = Discriminator(ngpu).to(self.device)
@@ -98,28 +99,29 @@ class MicroGan() :
         """
         # Output training stats
         print('[{}/{}]\tLoss_D: {:.4f}\tLoss_G: {:.4f} G1: {:.4f} G2: {:.4f} D: {:.4f}'.format(epoch, num_epochs, loss_discriminator, loss_generator, G1,G2,D))
-        # Visualization with visdom
-        viz.line([loss_discriminator], [epoch], win='ErrorD',
-                                   update='append' if epoch>0 else None,
-                                   name='Loss Discriminator',
-                                   opts=dict(
-                                       xlabel='Step',
-                                       ylabel='Loss',
-                                       title='Losses'))
-        # Visualization with visdom
-        viz.line([loss_generator], [epoch], win='ErrorD',
-                 update='append' if epoch > 0 else None,
-                 name='Loss Generator',
-                 opts=dict(
-                     xlabel='Step',
-                     ylabel='Loss',
-                     title='Losses'))
+        if self.viz :
+            # Visualization with visdom
+            self.viz.line([loss_discriminator], [epoch], win='ErrorD',
+                                       update='append' if epoch>0 else None,
+                                       name='Loss Discriminator',
+                                       opts=dict(
+                                           xlabel='Step',
+                                           ylabel='Loss',
+                                           title='Losses'))
+            # Visualization with visdom
+            self.viz.line([loss_generator], [epoch], win='ErrorD',
+                     update='append' if epoch > 0 else None,
+                     name='Loss Generator',
+                     opts=dict(
+                         xlabel='Step',
+                         ylabel='Loss',
+                         title='Losses'))
 
-        # Check how the generator is doing by saving G's output on fixed_noise
-        if (epoch % 10 == 0) :
-            with torch.no_grad():
-                fake = self.netG(self.fixed_noise).detach().cpu()
-                display_city(fake[0],win_name='Test Example',epoch=epoch)
+            # Check how the generator is doing by saving G's output on fixed_noise
+            if (epoch % 10 == 0) :
+                with torch.no_grad():
+                    fake = self.netG(self.fixed_noise).detach().cpu()
+                    display_city(fake[0],win_name='Test Example',viz=self.viz,epoch=epoch)
 
 
 

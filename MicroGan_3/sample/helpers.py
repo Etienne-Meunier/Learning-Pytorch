@@ -54,7 +54,7 @@ def generate_index_matrix():
 idxt = generate_index_matrix()
 
 
-def display_city(mtx,win_name,epoch=None) :
+def display_city(mtx,win_name,viz,epoch=None) :
     """
     Get a city and display a scatter plot representation on the visdom area
     """
@@ -63,7 +63,7 @@ def display_city(mtx,win_name,epoch=None) :
     viz.histogram(mtd.flatten(), win=win_name + ' Histogram mtd', opts=dict(title='Histogram mtd'))
     showMapVisdom(mtd, viz, generated=True, win_name=win_name, epoch=epoch)
 
-def load_dataset() :
+def load_dataset(viz) :
     # We can use an image folder dataset the way we have it setup.
     # Create the dataset
     dataset = dset.DatasetFolder(root=dataroot, transform=transforms.Compose([
@@ -78,9 +78,10 @@ def load_dataset() :
     # Decide which device we want to run on
     device = torch.device("cuda:0" if (torch.cuda.is_available() and ngpu > 0) else "cpu")
 
-    # Plot some training images
-    real_batch = next(iter(dataloader))
-    display_city(real_batch[0][0], win_name='Training Example',epoch='training')
+    if viz :
+        # Plot some training images
+        real_batch = next(iter(dataloader))
+        display_city(real_batch[0][0], win_name='Training Example',viz=viz,epoch='training')
 
     return dataset, dataloader ,device
 
@@ -94,3 +95,15 @@ def weights_init(m):
         nn.init.normal_(m.weight.data, 1.0, 0.02)
         nn.init.constant_(m.bias.data, 0)
 
+
+
+def create_viz(name_env) :
+    '''
+    Create the visdom visualization for the model
+    :param name_env: name of the dashboard
+    :return: visualisation object or None if not activated
+    '''
+    try:
+        return Visdom(env=name_env)
+    except:
+        return None

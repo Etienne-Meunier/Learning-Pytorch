@@ -8,8 +8,6 @@ name_env = 'MicroGanV3'
 
 print('Loading parameters {}'.format(name_env))
 
-viz = Visdom(env=name_env)
-
 n_visualisation = 100
 
 # Set random seed for reproducibility
