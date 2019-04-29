@@ -2,11 +2,13 @@ import random as random
 import torch
 from visdom import Visdom
 
-print('Loading parameters MicroGanV3')
 
 # visualization dasboard
+name_env = 'MicroGanV3'
 
-viz = Visdom(env='MicroGanV3')
+print('Loading parameters {}'.format(name_env))
+
+viz = Visdom(env=name_env)
 
 n_visualisation = 100
 
@@ -52,8 +54,8 @@ ndf = 64
 #
 # ​		`num_epoch` : Number of epoch to do - 5
 
-num_epochs = 100000
-g_iters  = 5
+num_epochs = 100
+g_iters  = 10
 d_iters = 1
 # ​		`lr` : learning rate - 0.0002
 

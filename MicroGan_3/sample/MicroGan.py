@@ -14,15 +14,11 @@ class MicroGan() :
         self.netD = Discriminator(ngpu).to(self.device)
 
         # Initialise Weights
-        self.netG.apply(weights_init)
-        self.netD.apply(weights_init)
+        #self.netG.apply(weights_init)
+        #self.netD.apply(weights_init)
 
         # We create a fixed subset of random for the latent variable, this way we can evauate our progress.
         self.fixed_noise = torch.randn(64, nz, 1, 1, device=self.device)
-
-        # Establish convention for real and fake labels during training
-        self.real_label = 1
-        self.fake_label = 0
 
         # Setup Adam optimizers for both G and D
         self.optimizerD = optim.RMSprop(self.netD.parameters(), lr=lr)
@@ -51,7 +47,7 @@ class MicroGan() :
                 real_images_cpu = real_images.to(self.device)
                 b_size = real_images_cpu.size(0)
                 # compute predictions for real images
-                real_predictions = self.netD(real_images).view(-1) # Compute predictions and flatten
+                real_predictions = self.netD(real_images_cpu).view(-1) # Compute predictions and flatten
 
                 # Generate random Serie
                 noise = torch.randn(b_size, nz, 1, 1, device=self.device)
@@ -59,8 +55,13 @@ class MicroGan() :
                 fake = self.netG(noise)
                 # compute predictions for fake images
                 fake_predictions = self.netD(fake.detach()).view(-1)
+
+
                 # loss Discriminator = mean(prediction fake) - mean(prediction real)
-                loss_discriminator = fake_predictions.mean() - real_predictions.mean()
+                loss_discriminator = -(real_predictions.mean() - fake_predictions.mean())
+                G1 = fake_predictions.mean()
+                D = real_predictions.mean()
+
                 # zero out the grad for Discriminator
                 self.netD.zero_grad()
                 # Backward la loss Discriminator
@@ -78,6 +79,7 @@ class MicroGan() :
                 fake = self.netG(noise)
                 # compute prediction for fake images again
                 fake_predictions = self.netD(fake).view(-1)
+                G2 = fake_predictions.mean()
                 # loss Generator = -mean(prediction fake)
                 loss_generator = -fake_predictions.mean()
                 # zero out the grad for Generator
@@ -86,16 +88,16 @@ class MicroGan() :
                 loss_generator.backward()
                 # OptimizerG
                 self.optimizerG.step()
-            self.visualize_progession(epoch, loss_discriminator.item(), loss_generator.item())
+            self.visualize_progession(epoch, loss_discriminator.item(), loss_generator.item(),G1,G2,D)
             self.save_model(epoch, loss_discriminator.item(), loss_generator.item())
 
-    def visualize_progession(self, epoch, loss_discriminator, loss_generator):
+    def visualize_progession(self, epoch, loss_discriminator, loss_generator, G1, G2, D):
         """
         Handle the printing and plotting of the loss
         :return:
         """
         # Output training stats
-        print('[{}/{}]\tLoss_D: {.4f}\tLoss_G: {.4f}'.format(epoch, num_epochs, loss_discriminator, loss_generator))
+        print('[{}/{}]\tLoss_D: {:.4f}\tLoss_G: {:.4f} G1: {:.4f} G2: {:.4f} D: {:.4f}'.format(epoch, num_epochs, loss_discriminator, loss_generator, G1,G2,D))
         # Visualization with visdom
         viz.line([loss_discriminator], [epoch], win='ErrorD',
                                    update='append' if epoch>0 else None,

@@ -5,6 +5,18 @@ import torch.nn as nn
 import numpy as np
 import torch
 from mapPrinter import showMapVisdom
+import logging
+
+
+def create_logger() :
+    logger = logging.getLogger(name_env)
+    logger.setLevel(logging.DEBUG)
+    fh = logging.FileHandler('../logs_output.log')
+    fh.setLevel(logging.DEBUG)
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    fh.setFormatter(formatter)
+    return logger
+
 
 
 def dense_to_one_hot(a) :
