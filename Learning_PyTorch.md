@@ -353,7 +353,7 @@ inputs = inputs.to_device(device)
 labels = labels.to_device(device)
 ```
 
-
+Warning : if you choose to put your data on the gpu you have to put you model too, if you do not you will have an Runtime error like "model and imput have to have the same tipe torch.cuda.FloatTensor/torch.FloatTensor " this is because the to(device) change the type of the variable. 
 
 Don't forget to also load the model to device to use the gpu :
 
@@ -361,8 +361,6 @@ Don't forget to also load the model to device to use the gpu :
 num_ftrs = model_ft.fc.in_features  # Get in features
 model_ft.fc = nn.Linear(num_ftrs, 2) # Replace te fc of the model with an empty linear with 2 layers
 ```
-
-
 
 ### Save Best Model 
 
@@ -388,7 +386,6 @@ Scheduling Learning rate allow to improve a lot the convergence speed.
 scheduler = optim.lr_scheduler() # set a new scheduler
 for epoch in range(num_epochs) :  # at each epoch
 	scheduler.step() # We step the scheduler before training
-	model.train() # set model for training mode 
 ```
 
 ### Load a pretrained Model 
@@ -423,6 +420,20 @@ We need to change that because we only need 2 outputs, nothing easier :
 num_ftrs = model_ft.fc.in_features  # Get the number of in features
 model_ft.fc = nn.Linear(num_ftrs, 2) # Replace last fc with an empty linear with 2 layers
 ```
+
+#### Note on Training BatchNorm/Dropout 
+
+Batch Normalization and Dropout need layers to act differently during training and test, for example with Dropout some of the neurones will be shut down during the training but of course not during the test. To manage that we need to change the "Mode" of the model using :
+
+```python
+model.train() # Set up training mode 
+' Perform Training normally '
+
+model.eval() # or model.train(False) to set up test mode
+' Perform Testing normally '
+```
+
+
 
 ## Implementation of Deep Convolutional GAN 
 
@@ -809,6 +820,49 @@ optimizerG.step()
 ```
 
 Because we can't detach the participation of netD in the error it will have gradients in netD, because we optimizer_G act before netD, we don't call the optimizer_D and zero out the gradients after it has no incidence on netD. 
+
+## Loss Function 
+
+The choice of loss function is crucial for a Deep Learning application, in addition to allow the user to define his loss function PyTorch offers a lot a functions.
+
+### NNLLLoss
+
+[Understanding softmax and the negative log-likelihood](<https://ljvmiranda921.github.io/notebook/2017/08/13/softmax-and-the-negative-log-likelihood/>)
+
+Negative Log Likelihood Loss, classification problems with $C$ classes 
+
+```python
+torch.nn.NLLLoss(weight=None, reduce=None, reduction='mean')
+```
+
+- **weight** : 1D tensor with the weight assigned to each class, useful for imbalanced training
+- **reduce** : if False, don't average loss for a mini batch and return n rows
+
+$$ l(x,y) = L = {l_1,...,l_N}, l_n= -{Weights}_{y_n}*x_{n,y_n}$$
+
+<u>Input of this Loss :</u>
+
+size : $(minibatch,C)$ C is the number of classes, we have the input for each class
+
+We need to add a Log-Softmax layer before applying this cost function.
+
+<u>Target of this Loss :</u>
+
+Tensor 1D with the correct labels for each element of the mini batch.
+
+<u>Output of this Loss :</u> 
+
+Scalar with the loss for the mini batch, Loss for each element if reduce at False
+
+### Cross Entropy Loss
+
+Combine Log(Softmax(x)) with NNLLLoss, allows to avoid adding a Log-Softmax. This way we don't  have to use Softmax on the last layer of our network, we can just finish with a Dense Layer. 
+
+ 
+
+
+
+
 
 
 
