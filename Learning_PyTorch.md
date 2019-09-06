@@ -14,8 +14,6 @@ x = torch.tensor([1,2]) # create from tensor
 x.Size # Return a tuple
 ```
 
-
-
 ### Operations
 
 PyTorch Supercharges operators so we can directly use :
@@ -860,12 +858,6 @@ Combine Log(Softmax(x)) with NNLLLoss, allows to avoid adding a Log-Softmax. Thi
 
  
 
-
-
-
-
-
-
 *Sources :* 
 
 [1] https://pytorch.org/tutorials/index.html
@@ -874,9 +866,108 @@ Combine Log(Softmax(x)) with NNLLLoss, allows to avoid adding a Log-Softmax. Thi
 
 
 
+# Inspired by FastAI Library
 
+In this second part we will get interessted in more advanced techniques that help us to train models, the goal if to have a toolbox to find easily Hyperparameters or improve models. A lot of those techniques will be inspired by the Fast AI library which is relllying on Pytorch a lot. 
 
+## Fast Ai's Learner
 
+This is the Learner class use in Fast Ai library :
+
+```python
+Learner(data:DataBunch, model:Module, opt_func:Callable='Adam', loss_func:Callable=None, metrics:Collection[Callable]=None, true_wd:bool=True, bn_wd:bool=True, wd:Floats=0.01, train_bn:bool=True, path:str=None, model_dir:PathOrStr='models', callback_fns:Collection[Callable]=None, callbacks:Collection[Callback]=<factory>, layer_groups:ModuleList=None, add_time:bool=True, silent:bool=None)
+```
+
+As we can see we can input everything including a model which is.a Pytorch nn.Module 
+
+## Optimisation
+
+### Learning Rate Finder
+
+The search for the right learning rate is always a complicated task, there is a technique called "Cyclical Learning Rate" that can allow us to find it in a semi-automated way. 
+
+**<u>Fast AI :</u>**
+
+```python
+model.lr_find()
+model.recorder.plot()
+```
+
+This function show the loss compared to the learning rate choice so we can choose manually the best learning rate. 
+
+**<u>Pytorch</u>**
+
+Counldn't find a official implementation yet but this https://github.com/davidtvs/pytorch-lr-finder give a nice implementation 
+
+```plot
+model = ...
+criterion = nn.CrossEntropyLoss()
+optimizer = optim.Adam(net.parameters(), lr=1e-7, weight_decay=1e-2)
+lr_finder = LRFinder(net, optimizer, criterion, device="cuda")
+lr_finder.range_test(trainloader, end_lr=100, num_iter=100)
+lr_finder.plot()
+```
+
+Given the plot we have to pick the learning Rate by ourself, Lesli, the author of the paper on cyclical Learning rate advice to take a power of ten under the learning rate that offer the lowest loss on the graph. According to Jeremy "On the learning rate finder, what you are looking for is the strongest downward slope that's kind of sticking around for quite a while." 
+
+### Cyclical Learning Rate Scheduler 
+
+As describe in the paper [**Cyclical Learning Rates for Training Neural Networks**](https://arxiv.org/pdf/1506.01186.pdf) the fact to increase and then decrease the learning rate during each epoch can allow to have better results and a faster convergence by avoiding to get trapped in saddle points and take big steps when we can. 
+
+**<u>Fast AI</u>**
+
+In FastAI library it is really in the center of the training with 
+
+```python
+fit_one_cycle(learn:Learner, cyc_len:int, max_lr:Union[float, Collection[float], slice]=slice(None, 0.003, None), moms:Point=(0.95, 0.85), div_factor:float=25.0, pct_start:float=0.3, final_div:float=None, wd:float=None, callbacks:Optional[Collection[Callback]]=None, tot_epochs:int=None, start_epoch:int=None)
+```
+
+```python
+model.fit_one_cycle(epochs)
+```
+
+that fits the model for a number of cycles, a cycles cover all the data as a classic epoch but the learning rate will change at each epoch. 
+
+**<u>Pytorch</u>**
+
+Pytorch also integrate this functionnality with :
+
+```python
+torch.optim.lr_scheduler.CyclicLR(optimizer, base_lr, max_lr, step_size_up=2000, step_size_down=None, mode='triangular', gamma=1.0, scale_fn=None, scale_mode='cycle', cycle_momentum=True, base_momentum=0.8, max_momentum=0.9, last_epoch=-1)
+```
+
+In the Pytorch version it is used as a scheduler that will be called after wich time we train the network, very easy.
+
+```python
+optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9)
+scheduler = torch.optim.lr_scheduler.CyclicLR(optimizer)
+data_loader = torch.utils.data.DataLoader(...)
+for epoch in range(10):
+    for batch in data_loader:
+        train_batch(...)
+        scheduler.step()
+```
+
+### Different Learning Rate to Fine Tune model
+
+Because we obvously dont want to train all the layers with the same learning rate, the general advice from fastai is to train the first layer with a learning rate 100 times smaller than the last layer and to equally repart for the layers between. If we use the learning rate finder, the learning rate picked with the technique will be the left bound ( the smaller one ).
+
+Don't forget to first train the new layers ( stage 1 ) before doing the fine tuning ( stage 2), most of the time we can divide the lr of stage 1 by 10 to have the one of stage 2.
+
+<u>**Fast Ai**</u>
+
+```python
+model.fit_one_cycle(2, max_lr=slice(1e-6,1e-4))
+```
+
+**<u>Pytorch</u>**
+
+```python
+optimizer = torch.optim.SGD([
+  {'params':,'lr':}
+ 	{'params':,'lr':}
+])
+```
 
 
 
