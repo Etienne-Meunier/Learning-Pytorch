@@ -866,6 +866,76 @@ Combine Log(Softmax(x)) with NNLLLoss, allows to avoid adding a Log-Softmax. Thi
 
 
 
+# Interpretation
+
+Network interpretation is more and more a strong field in Deep Learning. It tries to deal with the "Black Box" side of Neural Networks and have a lot of importances in numerous fields and for debugging. 
+
+PyTorch offers a lot a tools to understand our network and the predictions made. 
+
+One very good repo for CNN is : https://github.com/utkuozbulak/pytorch-cnn-visualizations
+
+## Hooks 
+
+Hooks are tools provided by PyTorch to get insight in our networks, in reality it is just functions we can define and link to a layer and that will activate automatically during the computation. 
+
+Building a Hooks takes 2 main steps : 
+
+- Defining the hook function 
+- Linking this function to the layer 
+
+After those 2 steps we just have to call the layer/network as usual and the function will execute. 
+
+Be careful with the order of input and output in definition it is confusing.
+
+
+### Forward Hooks 
+
+As the name state it will take place during forward step.
+
+<u>Function definition :</u> 
+
+```python
+def forward_function(module, input, output)
+"""
+    - module : the layer in itself
+    - input : tuple with packed input tensors 
+    - output : output tensor of the layer
+"""
+```
+
+​							input			 :arrow_right:  		 module        :arrow_right:             output
+
+<u>Link to the layer :</u> 
+
+```python
+net.conv2.register_forward_hook(forward_function)
+```
+
+### Backward Hooks 
+
+This time the backward step.
+
+<u>Function definition :</u> 
+
+```python
+def backward_function(module, grad_input, grad_output)
+"""
+    - module : the layer in itself
+    - grad_input : tuple with packed input grad tensors  
+    - grad_output : tuple with packed output grad tensors
+"""
+```
+
+​						grad_input		:arrow_left: 		module	:arrow_left:		grad_output
+
+<u>Link to the layer :</u> 
+
+```python
+net.conv2.register_backward_hook(forward_function)
+```
+
+
+
 # Inspired by FastAI Library
 
 In this second part we will get interessted in more advanced techniques that help us to train models, the goal if to have a toolbox to find easily Hyperparameters or improve models. A lot of those techniques will be inspired by the Fast AI library which is relllying on Pytorch a lot. 
